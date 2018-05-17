@@ -12,6 +12,32 @@ errorReadingFile = (err) => {
   console.log("error reading file:", err)        
 }
 
+function addNewPost(data,request) {
+  let blogs =  JSON.parse(data);
+  let maxID = 0;
+  for (let blog in blogs) {
+    maxID = Math.max(maxID,parseInt(blog))
+  }
+  let newBlogPost = {
+    "id": ++maxID,
+    "first_name": request.body.first_name,
+    "last_name": request.body.last_name,
+    "date": request.body.date,
+    "title": request.body.title,
+    "content": request.body.content
+  }
+  blogs[maxID] = newBlogPost;
+
+  fs.writeFile("./blog-data.json",JSON.stringify(blogs,null," "), (err) => {
+   if (err) {console.log("error writing file");}
+  })
+
+  return new Promise( resolve => {
+    console.log("new post: ",newBlogPost);
+    resolve(newBlogPost)
+  });
+}
+
 app.get("/blog", (request,response) => {
   readFileContents("./blog-data.json")
     .then(data => {
@@ -19,11 +45,6 @@ app.get("/blog", (request,response) => {
     })
     .catch(err => errorReadingFile(err))
 })
-
-//GET: /blog/{id}
-// This should return all blog posts from 'blog-data.json'
-// that have an id that matches whatever was passed in from the URL
-// i.e. /blog/5 should return all blog posts with the id of 5
 
 app.get("/blog/:id", (request,response) => {
   readFileContents("./blog-data.json") 
@@ -35,42 +56,23 @@ app.get("/blog/:id", (request,response) => {
     .catch(err => errorReadingFile)
 })
 
-
-//POST: /blog/new
-// This should accept a POST request with the following fields, and
-// add a new blog post to the blog-data.json file.
-//
-// * first_name
-// * last_name
-// * date
-// * title
-// * content 
-
-
 app.post("/new", (request,response) => {
-  readFileContents("./blog-data.json") 
-  .then(data => {
-    let blogs = JSON.parse(data);
-    let maxID = 0;
-    for (let blog in blogs) {
-      maxID = Math.max(maxID,parseInt(blog))
-    }
-    let newBlogPost = {
-      "id": ++maxID,
-      "first_name": request.body.first_name,
-      "last_name": request.body.last_name,
-      "date": request.body.date,
-      "title": request.body.title,
-      "content": request.body.content
-    }
-    blogs[maxID] = newBlogPost;
-    fs.writeFile("./blog-data.json",JSON.stringify(blogs,null," "), () => {
-      response.send(newBlogPost)  ;    
-    })
+  readFileContents("./blog-data.json","utf8") 
+  .then( data => {
+    return addNewPost(data,request)
   })
+  .then(data =>  {
+    console.log("post response:",data)
+    response.send(data);
+   })
+   .catch(err => {
+     console.log("err",err);
+   })
 })
 
 app.listen(3000, () => {
   console.log("Running on port 3000");
 })
+
+
 
