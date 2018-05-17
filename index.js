@@ -33,7 +33,6 @@ function addNewPost(data,request) {
   })
 
   return new Promise( resolve => {
-    console.log("new post: ",newBlogPost);
     resolve(newBlogPost)
   });
 }
@@ -62,7 +61,6 @@ app.post("/new", (request,response) => {
     return addNewPost(data,request)
   })
   .then(data =>  {
-    console.log("post response:",data)
     response.send(data);
    })
    .catch(err => {
